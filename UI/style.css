@@ -1,0 +1,30 @@
+.mic-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px auto;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #222;
+    color: #fff;
+    font-size: 40px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.mic-button:hover {
+    background-color: #444;
+}
+.mic-icon {
+    font-size: 40px;
+    color: #ff3b30;
+}
+.result-item {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.result-item strong {
+    font-size: 16px;
+    color: #333;
+}
