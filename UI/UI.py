@@ -3,6 +3,7 @@ import streamlit as st
 import os
 from record_audio import record_audio, stop_recording
 import sounddevice as sd
+from pydub import AudioSegment
 
 # Page title and layout
 st.set_page_config(page_title="Melodeez", layout="centered")
@@ -40,15 +41,14 @@ if st.button("🎤 Tap to Record"):
     if not st.session_state.is_recording:
         # Start recording
         st.session_state.is_recording = True
-        st.session_state.start_time = time.time()  # Record the start time
+        st.session_state.start_time = time.time()
         st.session_state.recording_data = record_audio(
             sample_rate=44100,
-            duration=15,  # Original recording duration
+            duration=15,  # Automatically stops after 15 seconds
             device=selected_device
-        )# auto stop after 15 seconds
-        st.warning("Recording started. Tap again to stop.")
+        )
     else:
-        # Stop recording
+        # Stop recording manually
         st.session_state.is_recording = False
         try:
             elapsed_time = time.time() - st.session_state.start_time
@@ -57,25 +57,53 @@ if st.button("🎤 Tap to Record"):
                 data=st.session_state.recording_data,
                 sample_rate=44100,
                 output_file=output_file,
-                max_duration=elapsed_time  # Save only the first 3 seconds
+                max_duration=min(15, elapsed_time)  # Ensure not exceeding 15 seconds
             )
             st.session_state.displaying_file = saved_file
             st.success(f"Recording saved as {saved_file}.")
         except Exception as e:
             st.error(f"Error: {e}")
 
-# Automatically stop after 15 seconds
+
+if st.session_state.is_recording and time.time() - st.session_state.start_time >= 15:
+    print("Auto-stopping recording...")
+    st.session_state.is_recording = False
+    try:
+        saved_file = stop_recording(
+            data=st.session_state.recording_data,
+            sample_rate=44100,
+            output_file="HumInput.wav",
+            max_duration=15
+        )
+        st.session_state.displaying_file = saved_file
+        st.success(f"Recording saved as {saved_file}.")
+    except Exception as e:
+        st.error(f"Error: {e}")
+
+if st.session_state.is_recording:
+    st.warning("Recording started. Press button again to stop.")
 
 # File uploader
-uploaded_file = st.file_uploader("Or upload an audio file:", type=["mp3", "wav"])
+uploaded_file = st.file_uploader("Or upload an audio file, 15 seconds max:", type=["mp3", "wav"])
 
 if uploaded_file and st.button("Upload"):
-    # Save uploaded file
     uploaded_path = f"uploaded_file.{uploaded_file.name.split('.')[-1]}"
     with open(uploaded_path, "wb") as f:
         f.write(uploaded_file.getbuffer())
-    st.session_state.displaying_file = uploaded_path
-    st.success("File uploaded successfully!")
+    
+    # Check duration
+    try:
+        audio = AudioSegment.from_file(uploaded_path)
+        duration_in_seconds = len(audio) / 1000  # Convert ms to seconds
+        
+        if duration_in_seconds < 5 or duration_in_seconds > 15:
+            st.error("Audio file duration must be between 3 and 15 seconds.")
+            os.remove(uploaded_path)  # Cleanup invalid file
+        else:
+            st.session_state.displaying_file = uploaded_path
+            st.success("File uploaded successfully!")
+    except Exception as e:
+        st.error(f"Error processing file: {e}")
 
 # Display the currently active file
 if st.session_state.displaying_file:
