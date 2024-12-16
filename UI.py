@@ -5,6 +5,7 @@ from record_audio import record_audio, stop_recording
 import sounddevice as sd
 from pydub import AudioSegment
 import tempfile
+from search import run_search_pipeline
 
 # Page title and layout
 st.set_page_config(page_title="Melodeez", layout="centered")
@@ -137,20 +138,24 @@ if st.session_state.displaying_file:
     st.audio("uploaded_file.wav", format="audio/wav")
 
 # Simulate search functionality
-if st.button("Search a song"):
-    st.subheader("Results from Search:")
-    results = [
-        {"title": "Song 1", "artist": "Artist A", "match": "90%"},
-        {"title": "Song 2", "artist": "Artist B", "match": "75%"},
-        {"title": "Song 3", "artist": "Artist C", "match": "60%"},
-    ]
-    for result in results:
-        st.markdown(
-            f"""
-            <div class="result-item">
-                <strong>{result['title']}</strong> by {result['artist']} <br>
-                Match: {result['match']}
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+if st.session_state.displaying_file and st.button("Search a song"):
+    try:
+        st.subheader("Results from Search:")
+        results = run_search_pipeline("uploaded_file.wav")
+
+        if results:
+            for result in results:
+                st.markdown(
+                    f"""
+                    <div class="result-item">
+                        <strong>{result['title']}</strong> by {result['artist']} <br>
+                        Match: {result['match']}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.warning("No matches found.")
+
+    except Exception as e:
+        st.error(f"Error during search: {str(e)}")

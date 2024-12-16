@@ -165,3 +165,8 @@ cython_debug/
 *.mp3
 *.wav
 *.m4a
+
+# Folder
+search
+output
+checkpoints
