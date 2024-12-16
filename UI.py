@@ -4,6 +4,7 @@ import os
 from record_audio import record_audio, stop_recording
 import sounddevice as sd
 from pydub import AudioSegment
+import tempfile
 
 # Page title and layout
 st.set_page_config(page_title="Melodeez", layout="centered")
@@ -86,35 +87,49 @@ if st.session_state.is_recording:
 # File uploader
 uploaded_file = st.file_uploader("Or upload an audio file (5-60 seconds):", type=["mp3", "wav", "m4a"])
 
+def check_audio_duration(file_content):
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.tmp') as tmp_file:
+        tmp_file.write(file_content)
+        tmp_path = tmp_file.name
+
+    try:
+        # Only load audio metadata for duration check
+        audio = AudioSegment.from_file(tmp_path)
+        duration = len(audio) / 1000
+        os.unlink(tmp_path)
+        return duration
+    except Exception as e:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+        raise e
+
 if uploaded_file and st.button("Upload"):
     try:
-        # First save the uploaded file with its original extension
-        temp_filename = f"temp_upload.{uploaded_file.name.split('.')[-1].lower()}"
-        with open(temp_filename, "wb") as f:
-            f.write(uploaded_file.getbuffer())
+        # First check duration without full conversion
+        file_content = uploaded_file.read()
+        duration = check_audio_duration(file_content)
 
-        # Convert to WAV using pydub
-        audio = AudioSegment.from_file(temp_filename)
-        duration_in_seconds = len(audio) / 1000  # Convert ms to seconds
-
-        if duration_in_seconds < 5:
+        if duration < 5:
             st.error("Audio file must be at least 5 seconds long.")
-        elif duration_in_seconds > 60:
+        elif duration > 60:
             st.error("Audio file must not exceed 60 seconds.")
         else:
-            # Export as WAV
+            # Only do the conversion if duration is valid
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.tmp') as tmp_file:
+                tmp_file.write(file_content)
+                tmp_path = tmp_file.name
+
+            # Convert to WAV
+            audio = AudioSegment.from_file(tmp_path)
             audio.export("uploaded_file.wav", format="wav")
             st.session_state.displaying_file = "uploaded_file.wav"
             st.success("File uploaded successfully!")
 
-        # Clean up temporary file
-        if os.path.exists(temp_filename):
-            os.remove(temp_filename)
+            # Clean up
+            os.unlink(tmp_path)
 
     except Exception as e:
         st.error(f"Error processing file: {e}")
-        if os.path.exists(temp_filename):
-            os.remove(temp_filename)
 
 # Display the currently active file
 if st.session_state.displaying_file:
