@@ -13,7 +13,7 @@ def record_audio(sample_rate, duration, device):
     except Exception as e:
         raise RuntimeError(f"Error during recording: {e}")
 
-def stop_recording(data, sample_rate, max_duration=15):
+def stop_recording(data, sample_rate, max_duration=60):
     try:
         sd.stop()
 

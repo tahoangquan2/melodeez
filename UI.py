@@ -43,32 +43,36 @@ if st.button("🎤 Tap to Record"):
         st.session_state.start_time = time.time()
         st.session_state.recording_data = record_audio(
             sample_rate=44100,
-            duration=15,  # Automatically stops after 15 seconds
+            duration=60,  # Automatically stops after 60 seconds
             device=selected_device
         )
     else:
         # Stop recording manually
         st.session_state.is_recording = False
-        try:
-            elapsed_time = time.time() - st.session_state.start_time
-            saved_file = stop_recording(
-                data=st.session_state.recording_data,
-                sample_rate=44100,
-                max_duration=min(15, elapsed_time)  # Ensure not exceeding 15 seconds
-            )
-            st.session_state.displaying_file = saved_file
-            st.success("Recording saved successfully!")
-        except Exception as e:
-            st.error(f"Error: {e}")
+        elapsed_time = time.time() - st.session_state.start_time
 
-if st.session_state.is_recording and time.time() - st.session_state.start_time >= 15:
+        if elapsed_time < 5:
+            st.error("Recording must be at least 5 seconds long. Please try again.")
+        else:
+            try:
+                saved_file = stop_recording(
+                    data=st.session_state.recording_data,
+                    sample_rate=44100,
+                    max_duration=min(60, elapsed_time)  # Ensure not exceeding 60 seconds
+                )
+                st.session_state.displaying_file = saved_file
+                st.success("Recording saved successfully!")
+            except Exception as e:
+                st.error(f"Error: {e}")
+
+if st.session_state.is_recording and time.time() - st.session_state.start_time >= 60:
     print("Auto-stopping recording...")
     st.session_state.is_recording = False
     try:
         saved_file = stop_recording(
             data=st.session_state.recording_data,
             sample_rate=44100,
-            max_duration=15
+            max_duration=60
         )
         st.session_state.displaying_file = saved_file
         st.success("Recording saved successfully!")
@@ -76,29 +80,41 @@ if st.session_state.is_recording and time.time() - st.session_state.start_time >
         st.error(f"Error: {e}")
 
 if st.session_state.is_recording:
-    st.warning("Recording started. Press button again to stop.")
+    elapsed = time.time() - st.session_state.start_time
+    st.warning(f"Recording in progress ({elapsed:.1f} seconds)... Press button again to stop.")
 
 # File uploader
-uploaded_file = st.file_uploader("Or upload an audio file, 15 seconds max:", type=["mp3", "wav"])
+uploaded_file = st.file_uploader("Or upload an audio file (5-60 seconds):", type=["mp3", "wav", "m4a"])
 
 if uploaded_file and st.button("Upload"):
     try:
-        # Save uploaded file as uploaded_file.wav
-        with open("uploaded_file.wav", "wb") as f:
+        # First save the uploaded file with its original extension
+        temp_filename = f"temp_upload.{uploaded_file.name.split('.')[-1].lower()}"
+        with open(temp_filename, "wb") as f:
             f.write(uploaded_file.getbuffer())
 
-        # Check duration
-        audio = AudioSegment.from_file("uploaded_file.wav")
+        # Convert to WAV using pydub
+        audio = AudioSegment.from_file(temp_filename)
         duration_in_seconds = len(audio) / 1000  # Convert ms to seconds
 
-        if duration_in_seconds < 5 or duration_in_seconds > 15:
-            st.error("Audio file duration must be between 3 and 15 seconds.")
-            os.remove("uploaded_file.wav")  # Cleanup invalid file
+        if duration_in_seconds < 5:
+            st.error("Audio file must be at least 5 seconds long.")
+        elif duration_in_seconds > 60:
+            st.error("Audio file must not exceed 60 seconds.")
         else:
+            # Export as WAV
+            audio.export("uploaded_file.wav", format="wav")
             st.session_state.displaying_file = "uploaded_file.wav"
             st.success("File uploaded successfully!")
+
+        # Clean up temporary file
+        if os.path.exists(temp_filename):
+            os.remove(temp_filename)
+
     except Exception as e:
         st.error(f"Error processing file: {e}")
+        if os.path.exists(temp_filename):
+            os.remove(temp_filename)
 
 # Display the currently active file
 if st.session_state.displaying_file:
