@@ -31,7 +31,6 @@ def run_search_pipeline(input_file):
         search_2('search', 'search', 'checkpoints/resnet18_best.pth')
         results = search_3('search', 'search')
 
-        # Read results
         results_file = os.path.join('search', 'results', 'search_results.json')
         if os.path.exists(results_file):
             with open(results_file, 'r') as f:
@@ -39,15 +38,32 @@ def run_search_pipeline(input_file):
 
             # Format results for UI
             formatted_results = []
+            seen_songs = set()
+
             for query_name, query_results in search_results.items():
                 for match in query_results['matches']:
+                    song_info = match['info']
+
+                    if song_info in seen_songs:
+                        continue
+
+                    seen_songs.add(song_info)
+
+                    if " - " in song_info:
+                        title, artist = song_info.split(" - ", 1)
+                    else:
+                        title = song_info
+                        artist = "Unknown Artist"
+
                     formatted_results.append({
-                        "title": match['song_name'],
-                        "artist": match['info'],
+                        "title": title,
+                        "artist": artist,
                         "match": f"{match['confidence']*100:.1f}%"
                     })
 
-            return formatted_results
+            formatted_results.sort(key=lambda x: float(x['match'].strip('%')), reverse=True)
+
+            return formatted_results[:20]
 
     except Exception as e:
         raise Exception(f"Search pipeline error: {str(e)}")
