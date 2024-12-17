@@ -13,14 +13,14 @@ def record_audio(sample_rate, duration, device):
     except Exception as e:
         raise RuntimeError(f"Error during recording: {e}")
 
-def stop_recording(data, sample_rate, output_file, max_duration=15):
+def stop_recording(data, sample_rate, max_duration=60):
     try:
         sd.stop()
 
         max_samples = int(max_duration * sample_rate)
-
         trimmed_data = data[:max_samples]
 
+        output_file = "uploaded_file.wav"
         sf.write(output_file, trimmed_data, sample_rate)
         return output_file
     except Exception as e:
