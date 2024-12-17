@@ -49,18 +49,18 @@ def run_search_pipeline(input_file):
 
                     seen_songs.add(song_info)
 
-                    if " - " in song_info:
-                        artist, title = song_info.split(" - ", 1)
+                    if "||" in song_info:
+                        title, artist = song_info.split("||", 1)
                     else:
-                        artist = "Unknown Artist"
                         title = song_info
+                        artist = "Unknown Artist"
 
                     max_distance = 1000.0
                     confidence = max(0, min(100, (1 - match['distance'] / max_distance) * 100))
 
                     formatted_results.append({
-                        "title": title,
-                        "artist": artist,
+                        "title": title.strip(),
+                        "artist": artist.strip(),
                         "match": f"{confidence:.1f}%"
                     })
 
