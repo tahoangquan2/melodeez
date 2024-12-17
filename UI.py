@@ -82,8 +82,7 @@ if st.session_state.is_recording and time.time() - st.session_state.start_time >
         st.error(f"Error: {e}")
 
 if st.session_state.is_recording:
-    elapsed = time.time() - st.session_state.start_time
-    st.warning(f"Recording in progress ({elapsed:.1f} seconds)... Press button again to stop.")
+    st.warning(f"Recording in progress... Press button again to stop.")
 
 # File uploader
 uploaded_file = st.file_uploader("Or upload an audio file (5-60 seconds):", type=["mp3", "wav", "m4a"])
