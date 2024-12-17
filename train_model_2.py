@@ -6,52 +6,68 @@ def generate_lists(root_dir='output/output3', output_dir='checkpoints'):
     os.makedirs(output_dir, exist_ok=True)
 
     metadata_file = os.path.join(root_dir, 'metadata.csv')
-    df = pd.read_csv(metadata_file)
+    try:
+        df = pd.read_csv(metadata_file)
+        required_columns = ['id', 'hum', 'song', 'testing']
 
-    train_data = df[df['testing'] == 'train']
-    val_data = df[df['testing'] == 'test']
+        if not all(col in df.columns for col in required_columns):
+            raise ValueError(f"Missing required columns. CSV must contain: {required_columns}")
 
-    train_lines = []
-    val_lines = []
+        train_data = df[df['testing'] == 'train']
+        val_data = df[df['testing'] == 'test']
 
-    for _, row in train_data.iterrows():
-        hum_path = os.path.join('hum', row['hum']).replace('\\', '/')
-        train_lines.append(f"{hum_path} {row['id']}")
+        train_lines = []
+        val_lines = []
 
-        song_path = os.path.join('song', row['song']).replace('\\', '/')
-        train_lines.append(f"{song_path} {row['id']}")
+        for _, row in train_data.iterrows():
+            hum_path = os.path.join('hum', row['hum']).replace('\\', '/')
+            train_lines.append(f"{hum_path} {row['id']}")
 
-    for _, row in val_data.iterrows():
-        hum_path = os.path.join('hum', row['hum']).replace('\\', '/')
-        val_lines.append(f"{hum_path} {row['id']}")
+            song_path = os.path.join('song', row['song']).replace('\\', '/')
+            train_lines.append(f"{song_path} {row['id']}")
 
-        song_path = os.path.join('song', row['song']).replace('\\', '/')
-        val_lines.append(f"{song_path} {row['id']}")
+        for _, row in val_data.iterrows():
+            hum_path = os.path.join('hum', row['hum']).replace('\\', '/')
+            val_lines.append(f"{hum_path} {row['id']}")
 
-    train_lines = list(dict.fromkeys(train_lines))
-    val_lines = list(dict.fromkeys(val_lines))
+            song_path = os.path.join('song', row['song']).replace('\\', '/')
+            val_lines.append(f"{song_path} {row['id']}")
 
-    with open(os.path.join(output_dir, 'train_list.txt'), 'w', encoding='utf-8') as f:
-        f.write('\n'.join(train_lines))
+        # Remove duplicates while preserving order
+        train_lines = list(dict.fromkeys(train_lines))
+        val_lines = list(dict.fromkeys(val_lines))
 
-    with open(os.path.join(output_dir, 'val_list.txt'), 'w', encoding='utf-8') as f:
-        f.write('\n'.join(val_lines))
+        with open(os.path.join(output_dir, 'train_list.txt'), 'w', encoding='utf-8') as f:
+            f.write('\n'.join(train_lines))
 
-    print(f"Created train list with {len(train_lines)} entries")
-    print(f"Created validation list with {len(val_lines)} entries")
+        with open(os.path.join(output_dir, 'val_list.txt'), 'w', encoding='utf-8') as f:
+            f.write('\n'.join(val_lines))
+
+        print(f"Created train list with {len(train_lines)} entries")
+        print(f"Created validation list with {len(val_lines)} entries")
+        print(f"Train samples: {len(train_data)}")
+        print(f"Validation samples: {len(val_data)}")
+
+    except Exception as e:
+        print(f"Error processing metadata file: {e}")
+        raise
 
 class Config:
     def __init__(self):
         # Training settings
-        self.train_batch_size = 64
+        self.train_batch_size = 32
         self.num_workers = 4
-        self.max_epoch = 100
+        self.max_epoch = 200
         self.lr = 1e-2
-        self.weight_decay = 1e-1
+        self.weight_decay = 1e-4
         self.print_freq = 100
 
+        # Learning rate decay settings
+        self.lr_decay = 0.9
+        self.lr_step = 20
+
         # Model settings
-        self.backbone = 'resnet18'
+        self.backbone = 'resnetface'
         self.input_shape = (1, 80, 630)
         self.embedding_dim = 512
 
@@ -63,5 +79,14 @@ class Config:
         # Save settings
         self.checkpoints_path = 'checkpoints'
 
-        # DO NOT CHANGE I DONT KNOW WHY BUT DONT - Visualization settings
-        self.display = False
+def main():
+    opt = Config()
+    os.makedirs(opt.checkpoints_path, exist_ok=True)
+
+    if not os.path.exists(opt.train_list) or not os.path.exists(opt.val_list):
+        print("Generating train and validation lists from metadata.csv...")
+        generate_lists(opt.train_root)
+
+    print("Starting model training...")
+    from train_model_1 import train_model_1
+    train_model_1(opt)

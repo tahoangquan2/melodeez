@@ -148,7 +148,7 @@ if st.session_state.displaying_file and st.button("Search a song"):
                 st.markdown(
                     f"""
                     <div class="result-item">
-                        <strong>{result['title']}</strong> by {result['artist']} <br>
+                        {result['title']} by {result['artist']} <br>
                         Match: {result['match']}
                     </div>
                     """,

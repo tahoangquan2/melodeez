@@ -28,7 +28,7 @@ def run_search_pipeline(input_file):
         copy_input_file(input_file)
 
         search_1('search', 'search')
-        search_2('search', 'search', 'checkpoints/resnet18_best.pth')
+        search_2('search', 'search', 'checkpoints/resnetface_best.pth')
         results = search_3('search', 'search')
 
         results_file = os.path.join('search', 'results', 'search_results.json')
@@ -50,15 +50,18 @@ def run_search_pipeline(input_file):
                     seen_songs.add(song_info)
 
                     if " - " in song_info:
-                        title, artist = song_info.split(" - ", 1)
+                        artist, title = song_info.split(" - ", 1)
                     else:
-                        title = song_info
                         artist = "Unknown Artist"
+                        title = song_info
+
+                    max_distance = 1000.0
+                    confidence = max(0, min(100, (1 - match['distance'] / max_distance) * 100))
 
                     formatted_results.append({
                         "title": title,
                         "artist": artist,
-                        "match": f"{match['confidence']*100:.1f}%"
+                        "match": f"{confidence:.1f}%"
                     })
 
             formatted_results.sort(key=lambda x: float(x['match'].strip('%')), reverse=True)
