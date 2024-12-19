@@ -33,7 +33,7 @@ def run_search_pipeline(input_file):
 
         results_file = os.path.join('search', 'results', 'search_results.json')
         if os.path.exists(results_file):
-            with open(results_file, 'r') as f:
+            with open(results_file, 'r', encoding='utf-8', errors='replace') as f:
                 search_results = json.load(f)
 
             # Format results for UI

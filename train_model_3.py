@@ -115,7 +115,7 @@ class AudioDataset(Dataset):
         else:
             raise ValueError("input_shape must be a tuple of (channels, height, width)")
 
-        with open(list_file, 'r') as f:
+        with open(list_file, 'r', encoding='utf-8', errors='replace') as f:
             lines = f.readlines()
             self.samples = []
             for line in lines:
@@ -177,7 +177,7 @@ class AudioDataset(Dataset):
 
 def read_val(path_val, data_root):
     dict_data = []
-    with open(path_val, 'r') as files:
+    with open(path_val, 'r', encoding='utf-8', errors='replace') as files:
         for line in files:
             parts = line.rstrip('\n').rsplit(' ', 1)
             if len(parts) != 2:

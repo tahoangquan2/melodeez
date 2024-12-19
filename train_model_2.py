@@ -37,10 +37,10 @@ def generate_lists(root_dir='output/output3', output_dir='checkpoints'):
         train_lines = list(dict.fromkeys(train_lines))
         val_lines = list(dict.fromkeys(val_lines))
 
-        with open(os.path.join(output_dir, 'train_list.txt'), 'w', encoding='utf-8') as f:
+        with open(os.path.join(output_dir, 'train_list.txt'), 'w', encoding='utf-8', errors='replace') as f:
             f.write('\n'.join(train_lines))
 
-        with open(os.path.join(output_dir, 'val_list.txt'), 'w', encoding='utf-8') as f:
+        with open(os.path.join(output_dir, 'val_list.txt'), 'w', encoding='utf-8', errors='replace') as f:
             f.write('\n'.join(val_lines))
 
         print(f"Created train list with {len(train_lines)} entries")
@@ -78,15 +78,3 @@ class Config:
 
         # Save settings
         self.checkpoints_path = 'checkpoints'
-
-def main():
-    opt = Config()
-    os.makedirs(opt.checkpoints_path, exist_ok=True)
-
-    if not os.path.exists(opt.train_list) or not os.path.exists(opt.val_list):
-        print("Generating train and validation lists from metadata.csv...")
-        generate_lists(opt.train_root)
-
-    print("Starting model training...")
-    from train_model_1 import train_model_1
-    train_model_1(opt)

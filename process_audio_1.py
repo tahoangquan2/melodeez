@@ -157,7 +157,7 @@ def process_data(data_folder, output_folder, target_db=-20.0, num_workers=8):
     output_metadata = []
     processing_args = []
 
-    with open(metadata_path, newline='') as csvfile:
+    with open(metadata_path, newline='', encoding='utf-8', errors='replace') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             hum_file = os.path.splitext(row['hum'])[0] + ".mp3"
@@ -190,7 +190,7 @@ def process_data(data_folder, output_folder, target_db=-20.0, num_workers=8):
                 print(f"Skipping {row['id']} due to processing failure.")
 
     output_metadata_file = os.path.join(output_folder, "metadata.csv")
-    with open(output_metadata_file, "w", newline="") as csvfile:
+    with open(output_metadata_file, "w", newline="", encoding='utf-8', errors='replace') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(["id", "hum", "song"])
         writer.writerows(output_metadata)
