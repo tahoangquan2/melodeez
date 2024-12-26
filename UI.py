@@ -7,13 +7,11 @@ from pydub import AudioSegment
 import tempfile
 from search import run_search_pipeline
 
-# Page title and layout with better spacing
+# Page title and layout
 st.set_page_config(page_title="Melodeez", layout="wide")
 
-# Container for better width control
 container = st.container()
 with container:
-    # Centered title with custom HTML
     st.markdown("""
         <div style='text-align: center; padding: 1rem;'>
             <h1 style='font-size: 3rem;'>🎵 Melodeez</h1>
@@ -21,7 +19,6 @@ with container:
         </div>
     """, unsafe_allow_html=True)
 
-    # Load CSS
     with open("style.css") as f:
         css = f.read()
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
@@ -33,11 +30,10 @@ with container:
     with col1:
         st.markdown("""
             <div style='background: rgba(157, 125, 255, 0.1); padding: 20px; border-radius: 10px;'>
-                <h3 style='margin-bottom: 1rem;'>Record Your Voice 🎤</h3>
+                <h3 style='margin-bottom: 1rem; text-align: center;'>Record Your Voice 🎤</h3>
             </div>
         """, unsafe_allow_html=True)
 
-        # Get available audio devices
         devices = sd.query_devices()
         input_devices = {i: d['name'] for i, d in enumerate(devices) if d['max_input_channels'] > 0}
 
@@ -57,7 +53,7 @@ with container:
         if "start_time" not in st.session_state:
             st.session_state.start_time = None
 
-        # Record button - Using original logic
+        st.markdown('<div class="button-container">', unsafe_allow_html=True)
         if st.button("🎤 Tap to Record"):
             if not st.session_state.is_recording:
                 # Start recording
@@ -86,6 +82,7 @@ with container:
                         st.success("Recording saved successfully!")
                     except Exception as e:
                         st.error(f"Error: {e}")
+        st.markdown('</div>', unsafe_allow_html=True)
 
         if st.session_state.is_recording:
             st.warning(f"Recording in progress... Press button again to stop.")
@@ -109,7 +106,7 @@ with container:
     with col2:
         st.markdown("""
             <div style='background: rgba(157, 125, 255, 0.1); padding: 20px; border-radius: 10px;'>
-                <h3 style='margin-bottom: 1rem;'>Upload Audio File 📁</h3>
+                <h3 style='margin-bottom: 1rem; text-align: center;'>Upload Audio File 📁</h3>
             </div>
         """, unsafe_allow_html=True)
 
@@ -133,6 +130,7 @@ with container:
                     os.unlink(tmp_path)
                 raise e
 
+        st.markdown('<div class="button-container">', unsafe_allow_html=True)
         if uploaded_file and st.button("Upload"):
             try:
                 file_content = uploaded_file.read()
@@ -156,18 +154,20 @@ with container:
 
             except Exception as e:
                 st.error(f"Error processing file: {e}")
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # Audio preview and search section
     if st.session_state.displaying_file:
         st.markdown("""
             <div style='background: rgba(157, 125, 255, 0.1); padding: 20px; border-radius: 10px; margin: 20px 0;'>
-                <h3>Current Input:</h3>
+                <h3 style='text-align: center;'>Current Input</h3>
             </div>
         """, unsafe_allow_html=True)
 
         st.audio("uploaded_file.wav", format="audio/wav")
 
-        if st.button("Search a song"):
+        st.markdown('<div class="button-container">', unsafe_allow_html=True)
+        if st.button("🔍 Searching"):
             try:
                 st.subheader("Results from Search:")
                 results = run_search_pipeline("uploaded_file.wav")
@@ -185,3 +185,4 @@ with container:
 
             except Exception as e:
                 st.error(f"Error during search: {str(e)}")
+        st.markdown('</div>', unsafe_allow_html=True)
