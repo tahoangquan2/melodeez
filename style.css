@@ -17,18 +17,17 @@ label {
   color: #e0e0e0 !important;
 }
 
-/* Recording button */
+/* Button styling */
 .stButton > button {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 0.5rem 1rem !important;
   background-color: #9d7dff !important;
   color: white !important;
   border: none !important;
   border-radius: 8px !important;
   transition: all 0.3s ease !important;
   font-weight: 500 !important;
+  padding: 0.5rem 1rem !important;
+  margin: 0 auto !important;
+  display: block !important;
 }
 
 .stButton > button:hover {
@@ -36,13 +35,11 @@ label {
   transform: translateY(-1px);
 }
 
-/* Microphone specific button */
-button[kind="secondary"]:has(span:contains("Record")) {
-  background-color: #9d7dff !important;
-  width: 80px !important;
-  height: 80px !important;
-  border-radius: 50% !important;
-  box-shadow: 0 4px 12px rgba(157, 125, 255, 0.3) !important;
+/* Button container for centering */
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
 }
 
 /* File uploader */
@@ -105,9 +102,4 @@ audio {
   margin: 10px 0;
   border-radius: 8px;
   background: rgba(157, 125, 255, 0.1);
-}
-
-/* Ensure text readability */
-div[data-testid="stMarkdownContainer"] {
-  color: #e0e0e0 !important;
 }
