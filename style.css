@@ -1,138 +1,95 @@
-/* Main container styling */
 .stApp {
   background: linear-gradient(to bottom, #1a1625, #2d1f3d) !important;
+}
+
+.main .block-container {
+  background: transparent !important;
   color: #e0e0e0 !important;
 }
 
-/* Override Streamlit's default white background */
-.main .block-container {
-  background: transparent !important;
+/* Title and text colors */
+h1,
+h2,
+h3,
+.stMarkdown,
+p,
+label {
+  color: #e0e0e0 !important;
 }
 
-/* Title styling */
-.main-title {
-  font-size: 2.5rem !important;
-  color: #b8a6ff !important;
-  text-align: center;
-  margin-bottom: 1.5rem !important;
-  padding: 1rem;
+/* Recording button */
+.stButton > button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.5rem 1rem !important;
+  background-color: #9d7dff !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+  font-weight: 500 !important;
 }
 
-/* Recording button styling */
-.mic-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 20px auto;
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background-color: #9d7dff;
-  color: #fff;
-  font-size: 40px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
-  box-shadow: 0 4px 12px rgba(157, 125, 255, 0.3);
+.stButton > button:hover {
+  background-color: #7a5ccf !important;
+  transform: translateY(-1px);
 }
 
-.mic-button:hover {
-  background-color: #8b6aff;
-  transform: scale(1.05);
+/* Microphone specific button */
+button[kind="secondary"]:has(span:contains("Record")) {
+  background-color: #9d7dff !important;
+  width: 80px !important;
+  height: 80px !important;
+  border-radius: 50% !important;
+  box-shadow: 0 4px 12px rgba(157, 125, 255, 0.3) !important;
 }
 
-.mic-button.recording {
-  background-color: #ff3b30;
-  animation: pulse 2s infinite;
+/* File uploader */
+[data-testid="stFileUploader"] {
+  background: rgba(157, 125, 255, 0.1) !important;
+  border: 2px dashed #3d2f5b !important;
+  border-radius: 8px !important;
+  padding: 20px !important;
 }
 
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.4);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(255, 59, 48, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0);
-  }
+[data-testid="stFileUploader"]:hover {
+  border-color: #9d7dff !important;
 }
 
-/* File uploader styling */
-.uploadfile {
-  border: 2px dashed #9d7dff;
-  border-radius: 10px;
-  padding: 20px;
-  text-align: center;
-  background: rgba(157, 125, 255, 0.1);
-  transition: all 0.3s ease;
+/* Select box */
+[data-baseweb="select"] {
+  background-color: rgba(157, 125, 255, 0.1) !important;
+  border-color: #3d2f5b !important;
 }
 
-.uploadfile:hover {
-  border-color: #8b6aff;
-  background: rgba(157, 125, 255, 0.15);
+[data-baseweb="select"]:hover {
+  border-color: #9d7dff !important;
 }
 
-/* Search results styling */
+/* Search results */
 .result-item {
   padding: 15px;
   border-radius: 8px;
   background: rgba(157, 125, 255, 0.1);
-  margin-bottom: 10px;
+  margin: 10px 0;
   border: 1px solid #3d2f5b;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  color: #e0e0e0;
 }
 
 .result-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(157, 125, 255, 0.2);
   border-color: #9d7dff;
   background: rgba(157, 125, 255, 0.15);
 }
 
-.result-item strong {
-  font-size: 16px;
-  color: #b8a6ff;
-  margin-bottom: 5px;
-}
-
-/* Audio player styling */
-audio {
-  width: 100%;
-  margin: 10px 0;
-  border-radius: 8px;
-  background: rgba(157, 125, 255, 0.1);
-}
-
-/* Override Streamlit default styles for dark mode */
-.stSelectbox [data-testid="stMarkdownContainer"] {
-  color: #e0e0e0 !important;
-}
-
-.stButton > button {
-  background-color: #9d7dff !important;
-  color: white !important;
-  border: none !important;
-  padding: 0.5rem 1rem !important;
-  border-radius: 8px !important;
-}
-
-.stButton > button:hover {
-  background-color: #8b6aff !important;
-  border: none !important;
-}
-
-/* Success/Error message styling */
+/* Alert states */
 .stSuccess {
-  color: #4caf50 !important;
   background-color: rgba(76, 175, 80, 0.1) !important;
   border-color: #4caf50 !important;
 }
 
 .stError {
-  color: #ff3b30 !important;
   background-color: rgba(255, 59, 48, 0.1) !important;
   border-color: #ff3b30 !important;
 }
@@ -140,4 +97,17 @@ audio {
 .stWarning {
   background-color: rgba(255, 152, 0, 0.1) !important;
   border-color: #ff9800 !important;
+}
+
+/* Audio player */
+audio {
+  width: 100%;
+  margin: 10px 0;
+  border-radius: 8px;
+  background: rgba(157, 125, 255, 0.1);
+}
+
+/* Ensure text readability */
+div[data-testid="stMarkdownContainer"] {
+  color: #e0e0e0 !important;
 }

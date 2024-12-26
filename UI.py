@@ -7,22 +7,25 @@ from pydub import AudioSegment
 import tempfile
 from search import run_search_pipeline
 
-# Page configuration
-st.set_page_config(
-    page_title="Melodeez",
-    layout="centered",
-    initial_sidebar_state="collapsed"
-)
+# Page title and layout
+st.set_page_config(page_title="Melodeez", layout="centered")
+st.title("Melodeez")
 
 # Load CSS
 with open("style.css") as f:
     css = f.read()
+
 st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
-# Title with custom styling
-st.markdown("<h1 class='main-title'>🎵 Melodeez</h1>", unsafe_allow_html=True)
+# Get available audio devices
+devices = sd.query_devices()
+input_devices = {i: d['name'] for i, d in enumerate(devices) if d['max_input_channels'] > 0}
 
-# Initialize session state
+st.subheader("Provide a sample or hum your tune:")
+selected_device = st.selectbox(
+    "Choose your microphone:", options=list(input_devices.keys()), format_func=lambda x: input_devices[x]
+)
+
 if "is_recording" not in st.session_state:
     st.session_state.is_recording = False
 if "recording_data" not in st.session_state:
@@ -32,37 +35,18 @@ if "displaying_file" not in st.session_state:
 if "start_time" not in st.session_state:
     st.session_state.start_time = None
 
-# Get available audio devices
-devices = sd.query_devices()
-input_devices = {i: d['name'] for i, d in enumerate(devices) if d['max_input_channels'] > 0}
-
-st.subheader("Choose how to input your tune:")
-selected_device = st.selectbox(
-    "Select your microphone:",
-    options=list(input_devices.keys()),
-    format_func=lambda x: input_devices[x]
-)
-
-# Record button with improved logic
-record_button = st.button(
-    "🎤 " + ("Stop Recording" if st.session_state.is_recording else "Start Recording"),
-    key="record_button",
-    help="Click to start/stop recording. Minimum 5 seconds, maximum 60 seconds."
-)
-
-if record_button:
+if st.button("🎤 Tap to Record"):
     if not st.session_state.is_recording:
         # Start recording
         st.session_state.is_recording = True
         st.session_state.start_time = time.time()
         st.session_state.recording_data = record_audio(
             sample_rate=44100,
-            duration=60,
+            duration=60,  # Automatically stops after 60 seconds
             device=selected_device
         )
-        st.experimental_rerun()
     else:
-        # Stop recording
+        # Stop recording manually
         st.session_state.is_recording = False
         elapsed_time = time.time() - st.session_state.start_time
 
@@ -73,45 +57,31 @@ if record_button:
                 saved_file = stop_recording(
                     data=st.session_state.recording_data,
                     sample_rate=44100,
-                    max_duration=min(60, elapsed_time)
+                    max_duration=min(60, elapsed_time)  # Ensure not exceeding 60 seconds
                 )
                 st.session_state.displaying_file = saved_file
                 st.success("Recording saved successfully!")
-                st.experimental_rerun()
             except Exception as e:
                 st.error(f"Error: {e}")
 
-# Show recording status
+if st.session_state.is_recording and time.time() - st.session_state.start_time >= 60:
+    print("Auto-stopping recording...")
+    st.session_state.is_recording = False
+    try:
+        saved_file = stop_recording(
+            data=st.session_state.recording_data,
+            sample_rate=44100,
+            max_duration=60
+        )
+        st.session_state.displaying_file = saved_file
+        st.success("Recording saved successfully!")
+    except Exception as e:
+        st.error(f"Error: {e}")
+
 if st.session_state.is_recording:
-    elapsed = time.time() - st.session_state.start_time
-    st.markdown(f"""
-        <div style='text-align: center; color: #ff3b30;'>
-            Recording in progress... ({elapsed:.1f}s)
-        </div>
-    """, unsafe_allow_html=True)
+    st.warning(f"Recording in progress... Press button again to stop.")
 
-    # Auto-stop recording after 60 seconds
-    if elapsed >= 60:
-        st.session_state.is_recording = False
-        try:
-            saved_file = stop_recording(
-                data=st.session_state.recording_data,
-                sample_rate=44100,
-                max_duration=60
-            )
-            st.session_state.displaying_file = saved_file
-            st.success("Recording saved successfully!")
-            st.experimental_rerun()
-        except Exception as e:
-            st.error(f"Error: {e}")
-
-# File upload section
-st.markdown("### Or upload an audio file:")
-uploaded_file = st.file_uploader(
-    "Upload audio (5-60 seconds)",
-    type=["mp3", "wav", "m4a"],
-    help="Supports MP3, WAV, and M4A formats"
-)
+uploaded_file = st.file_uploader("Or upload an audio file (5-60 seconds):", type=["mp3", "wav", "m4a"])
 
 def check_audio_duration(file_content):
     with tempfile.NamedTemporaryFile(delete=False, suffix='.tmp') as tmp_file:
@@ -119,6 +89,7 @@ def check_audio_duration(file_content):
         tmp_path = tmp_file.name
 
     try:
+        # Only load audio metadata for duration check
         audio = AudioSegment.from_file(tmp_path)
         duration = len(audio) / 1000
         os.unlink(tmp_path)
@@ -128,7 +99,7 @@ def check_audio_duration(file_content):
             os.unlink(tmp_path)
         raise e
 
-if uploaded_file and st.button("Process Upload"):
+if uploaded_file and st.button("Upload"):
     try:
         file_content = uploaded_file.read()
         duration = check_audio_duration(file_content)
@@ -152,28 +123,28 @@ if uploaded_file and st.button("Process Upload"):
     except Exception as e:
         st.error(f"Error processing file: {e}")
 
-# Display current audio and search functionality
 if st.session_state.displaying_file:
-    st.markdown("### Current Input:")
-    st.audio(st.session_state.displaying_file, format="audio/wav")
+    st.write(f"Current Input:")
+    st.audio("uploaded_file.wav", format="audio/wav")
 
-    if st.button("🔍 Search for Matches"):
-        try:
-            with st.spinner("Searching for matches..."):
-                results = run_search_pipeline(st.session_state.displaying_file)
+if st.session_state.displaying_file and st.button("Search a song"):
+    try:
+        st.subheader("Results from Search:")
+        results = run_search_pipeline("uploaded_file.wav")
 
-            if results:
-                st.markdown("### Found Matches:")
-                for result in results:
-                    st.markdown(f"""
-                        <div class="result-item">
-                            <strong>{result['title']}</strong>
-                            <div>Artist: {result['artist']}</div>
-                            <div>Match: {result['match']}</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-            else:
-                st.warning("No matches found. Try recording a longer sample.")
+        if results:
+            for result in results:
+                st.markdown(
+                    f"""
+                    <div class="result-item">
+                        {result['title']} by {result['artist']} <br>
+                        Match: {result['match']}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.warning("No matches found.")
 
-        except Exception as e:
-            st.error(f"Error during search: {str(e)}")
+    except Exception as e:
+        st.error(f"Error during search: {str(e)}")
