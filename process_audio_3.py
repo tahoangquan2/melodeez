@@ -73,7 +73,7 @@ def process_data(data_folder, output_folder):
 
         all_ids = set()
         rows = []
-        with open(input_metadata, 'r', encoding='utf-8', errors='replace') as f:
+        with open(input_metadata, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             for row in reader:
                 all_ids.add(row['id'])
@@ -83,7 +83,7 @@ def process_data(data_folder, output_folder):
 
         test_ids = set(random.sample(list(all_ids), k=int(len(all_ids) * test_ratio)))
 
-    with open(output_metadata, 'w', newline='', encoding='utf-8', errors='replace') as f:
+    with open(output_metadata, 'w', newline='', encoding='utf-8') as f:
         fieldnames = ["id", "hum", "song", "testing"]
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()

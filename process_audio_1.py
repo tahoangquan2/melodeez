@@ -7,22 +7,6 @@ from concurrent.futures import ProcessPoolExecutor
 from tqdm import tqdm
 import subprocess
 
-def get_center(audio_data, sr):
-    total_duration = len(audio_data) / sr
-    if total_duration > 45:
-        middle_point = len(audio_data) // 2
-        samples_per_45_sec = 45 * sr
-        start_sample = middle_point - (samples_per_45_sec // 2)
-        end_sample = start_sample + samples_per_45_sec
-        return audio_data[start_sample:end_sample]
-    return audio_data
-
-def get_first_60s(audio_data, sr):
-    samples_per_60_sec = 60 * sr
-    if len(audio_data) > samples_per_60_sec:
-        return audio_data[:samples_per_60_sec]
-    return audio_data
-
 def load_audio(file_path):
     try:
         audio_data, sr = sf.read(file_path)
@@ -78,12 +62,12 @@ def save_audio(audio_data, sr, output_path):
 
         command = [
             'ffmpeg',
-            '-f', 's16le',  # input format
-            '-ar', str(sr),  # input sample rate
-            '-ac', '1',      # input channels
-            '-i', 'pipe:',   # input from pipe
-            '-c:a', 'libmp3lame',  # output codec
-            '-y',            # overwrite output file
+            '-f', 's16le',
+            '-ar', str(sr),
+            '-ac', '1',
+            '-i', 'pipe:',
+            '-c:a', 'libmp3lame',
+            '-y',
             output_path
         ]
 
@@ -111,40 +95,17 @@ def process_file(args):
             raise FileNotFoundError(f"{input_path} not found")
 
         audio_data, sr = load_audio(input_path)
-        success = False
 
-        if "/hum/" in input_path or "\\hum\\" in input_path:
-            # Process middle 45s version
-            middle_audio = get_center(audio_data, sr)
-            middle_audio = adjust_volume(middle_audio, target_db)
-            middle_audio = trim_silence(middle_audio, sr)
+        audio_data = adjust_volume(audio_data, target_db)
+        audio_data = trim_silence(audio_data, sr)
 
-            if is_valid_sound(middle_audio, sr, min_dur, max_dur):
-                middle_audio = librosa.util.normalize(middle_audio)
-                os.makedirs(os.path.dirname(output_path), exist_ok=True)
-                success = save_audio(middle_audio, sr, output_path)
+        if is_valid_sound(audio_data, sr, min_dur, max_dur):
+            audio_data = librosa.util.normalize(audio_data)
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            success = save_audio(audio_data, sr, output_path)
+            return success
 
-            # Process first 60s version
-            first_60s_audio = get_first_60s(audio_data, sr)
-            first_60s_audio = adjust_volume(first_60s_audio, target_db)
-            first_60s_audio = trim_silence(first_60s_audio, sr)
-
-            if is_valid_sound(first_60s_audio, sr, min_dur, max_dur):
-                first_60s_audio = librosa.util.normalize(first_60s_audio)
-                output_path_60s = output_path.replace('.mp3', '__2.mp3')
-                os.makedirs(os.path.dirname(output_path_60s), exist_ok=True)
-                success = save_audio(first_60s_audio, sr, output_path_60s) and success
-        else:
-            # Normal processing for song files
-            audio_data = adjust_volume(audio_data, target_db)
-            audio_data = trim_silence(audio_data, sr)
-
-            if is_valid_sound(audio_data, sr, min_dur, max_dur):
-                audio_data = librosa.util.normalize(audio_data)
-                os.makedirs(os.path.dirname(output_path), exist_ok=True)
-                success = save_audio(audio_data, sr, output_path)
-
-        return success
+        return False
 
     except Exception as e:
         print(f"Error processing {input_path}: {str(e)}")
@@ -157,7 +118,7 @@ def process_data(data_folder, output_folder, target_db=-20.0, num_workers=8):
     output_metadata = []
     processing_args = []
 
-    with open(metadata_path, newline='', encoding='utf-8', errors='replace') as csvfile:
+    with open(metadata_path, newline='', encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             hum_file = os.path.splitext(row['hum'])[0] + ".mp3"
@@ -190,7 +151,7 @@ def process_data(data_folder, output_folder, target_db=-20.0, num_workers=8):
                 print(f"Skipping {row['id']} due to processing failure.")
 
     output_metadata_file = os.path.join(output_folder, "metadata.csv")
-    with open(output_metadata_file, "w", newline="", encoding='utf-8', errors='replace') as csvfile:
+    with open(output_metadata_file, "w", newline="", encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(["id", "hum", "song"])
         writer.writerows(output_metadata)

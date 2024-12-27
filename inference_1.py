@@ -11,8 +11,11 @@ def process_inference_step1(data_folder, output_folder, target_db=-20.0, num_wor
     output_metadata = []
     processing_args = []
 
-    with open(metadata_path, newline='', encoding='utf-8', errors='replace') as csvfile:
-        reader = csv.DictReader(csvfile)
+    fieldnames = ['id', 'song', 'info']
+
+    with open(metadata_path, newline='', encoding='utf-8') as csvfile:
+        reader = csv.DictReader(csvfile, fieldnames=fieldnames)
+        next(reader)
         for row in reader:
             song_file = os.path.splitext(row['song'])[0] + ".mp3"
             song_input = os.path.join(data_folder, "song", row['song'])
@@ -40,7 +43,7 @@ def process_inference_step1(data_folder, output_folder, target_db=-20.0, num_wor
         print("No new files to process in step 1")
 
     output_metadata_file = os.path.join(output_folder, "metadata.csv")
-    with open(output_metadata_file, "w", newline="", encoding='utf-8', errors='replace') as csvfile:
+    with open(output_metadata_file, "w", newline="", encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(["id", "song", "info"])
         writer.writerows(output_metadata)
@@ -56,7 +59,7 @@ def process_inference_step3(input_folder, output_folder):
     output_metadata = []
     files_to_process = []
 
-    with open(metadata_path, newline='', encoding='utf-8', errors='replace') as csvfile:
+    with open(metadata_path, newline='', encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         rows = list(reader)
 
@@ -83,7 +86,7 @@ def process_inference_step3(input_folder, output_folder):
         print("No new files to process in step 3")
 
     output_metadata_file = os.path.join(output_folder, "metadata.csv")
-    with open(output_metadata_file, "w", newline="", encoding='utf-8', errors='replace') as csvfile:
+    with open(output_metadata_file, "w", newline="", encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(["id", "song", "info"])
         writer.writerows(output_metadata)

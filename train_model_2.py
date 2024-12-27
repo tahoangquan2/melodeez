@@ -1,6 +1,6 @@
-from __future__ import print_function
 import os
 import pandas as pd
+from logger import logger
 
 def generate_lists(root_dir='output/output3', output_dir='checkpoints'):
     os.makedirs(output_dir, exist_ok=True)
@@ -37,19 +37,19 @@ def generate_lists(root_dir='output/output3', output_dir='checkpoints'):
         train_lines = list(dict.fromkeys(train_lines))
         val_lines = list(dict.fromkeys(val_lines))
 
-        with open(os.path.join(output_dir, 'train_list.txt'), 'w', encoding='utf-8', errors='replace') as f:
+        with open(os.path.join(output_dir, 'train_list.txt'), 'w', encoding='utf-8') as f:
             f.write('\n'.join(train_lines))
 
-        with open(os.path.join(output_dir, 'val_list.txt'), 'w', encoding='utf-8', errors='replace') as f:
+        with open(os.path.join(output_dir, 'val_list.txt'), 'w', encoding='utf-8') as f:
             f.write('\n'.join(val_lines))
 
-        print(f"Created train list with {len(train_lines)} entries")
-        print(f"Created validation list with {len(val_lines)} entries")
-        print(f"Train samples: {len(train_data)}")
-        print(f"Validation samples: {len(val_data)}")
+        logger.info(f"Created train list with {len(train_lines)} entries")
+        logger.info(f"Created validation list with {len(val_lines)} entries")
+        logger.info(f"Train samples: {len(train_data)}")
+        logger.info(f"Validation samples: {len(val_data)}")
 
     except Exception as e:
-        print(f"Error processing metadata file: {e}")
+        logger.error(f"Error processing metadata file: {e}")
         raise
 
 class Config:
@@ -57,14 +57,10 @@ class Config:
         # Training settings
         self.train_batch_size = 32
         self.num_workers = 4
-        self.max_epoch = 200
-        self.lr = 1e-2
+        self.max_epoch = 50
+        self.lr = 5e-4
         self.weight_decay = 1e-4
-        self.print_freq = 100
-
-        # Learning rate decay settings
-        self.lr_decay = 0.9
-        self.lr_step = 20
+        self.print_freq = 50
 
         # Model settings
         self.backbone = 'resnetface'
@@ -78,3 +74,15 @@ class Config:
 
         # Save settings
         self.checkpoints_path = 'checkpoints'
+
+def main():
+    opt = Config()
+    os.makedirs(opt.checkpoints_path, exist_ok=True)
+
+    if not os.path.exists(opt.train_list) or not os.path.exists(opt.val_list):
+        logger.info("Generating train and validation lists from metadata.csv...")
+        generate_lists(opt.train_root)
+
+    logger.info("Starting model training...")
+    from train_model_1 import train_model_1
+    train_model_1(opt)
